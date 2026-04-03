@@ -1,9 +1,30 @@
 // ===== CURSOR GLOW =====
 const cursorGlow = document.getElementById('cursorGlow');
+const heroSection = document.getElementById('hero');
+const heroSpotlight = document.getElementById('heroSpotlight');
 
 document.addEventListener('mousemove', (e) => {
   cursorGlow.style.left = e.clientX + 'px';
   cursorGlow.style.top = e.clientY + 'px';
+
+  // Detect if cursor is over the hero section
+  const heroRect = heroSection.getBoundingClientRect();
+  const inHero = (
+    e.clientY >= heroRect.top &&
+    e.clientY <= heroRect.bottom &&
+    e.clientX >= heroRect.left &&
+    e.clientX <= heroRect.right
+  );
+
+  cursorGlow.classList.toggle('glow-hero', inHero);
+
+  // Update spotlight position relative to hero
+  if (inHero) {
+    const xPercent = ((e.clientX - heroRect.left) / heroRect.width) * 100;
+    const yPercent = ((e.clientY - heroRect.top) / heroRect.height) * 100;
+    heroSpotlight.style.setProperty('--spot-x', xPercent + '%');
+    heroSpotlight.style.setProperty('--spot-y', yPercent + '%');
+  }
 });
 
 // ===== NAVIGATION SCROLL =====
