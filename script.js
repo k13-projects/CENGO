@@ -117,6 +117,43 @@ contactForm.addEventListener('submit', (e) => {
   }, 2000);
 });
 
+// ===== O-PLAYER =====
+const heroO = document.getElementById('heroO');
+const heroWaveBars = document.getElementById('heroWaveBars');
+
+// Generate small wave bars under the title
+const barCount = 24;
+for (let i = 0; i < barCount; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'hero-wave-bar';
+  const t = i / (barCount - 1);
+  const h = Math.sin(t * Math.PI) * (0.4 + Math.random() * 0.6);
+  bar.style.height = Math.max(3, h * 20) + 'px';
+  bar.style.animationDelay = (i * 0.07) + 's';
+  heroWaveBars.appendChild(bar);
+}
+
+let playTimer = null;
+
+function startPlaying(duration) {
+  clearTimeout(playTimer);
+  heroO.classList.add('playing');
+  heroWaveBars.classList.add('active');
+  playTimer = setTimeout(() => {
+    heroO.classList.remove('playing');
+    heroWaveBars.classList.remove('active');
+    playTimer = null;
+  }, duration);
+}
+
+// Auto-play on landing for 2 seconds
+setTimeout(() => startPlaying(2000), 800);
+
+// Click O to play for 3 seconds
+heroO.addEventListener('click', () => {
+  startPlaying(4000);
+});
+
 // ===== PARALLAX EFFECTS =====
 const parallaxImages = document.querySelectorAll('.parallax-img');
 
