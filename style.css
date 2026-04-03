@@ -54,7 +54,8 @@ img {
   border-radius: 50%;
   background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
   pointer-events: none;
-  z-index: 0;
+  z-index: 9999;
+  mix-blend-mode: screen;
   opacity: 0;
   transform: translate(-50%, -50%);
   transition: opacity 0.4s ease, background 0.8s ease;
@@ -614,13 +615,20 @@ body:hover .cursor-glow {
   gap: 0;
   padding: 40px 0;
   position: relative;
-  overflow: hidden;
 }
 
 .feature-split-image {
   position: relative;
   flex: 0 0 auto;
-  max-width: 420px;
+  max-width: 630px;
+  transform: translateX(200px);
+  opacity: 0;
+  transition: transform 1.4s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.8s ease;
+}
+
+.feature-split-image.visible {
+  transform: translateX(0);
+  opacity: 1;
 }
 
 .feature-split-image img {
@@ -629,6 +637,24 @@ body:hover .cursor-glow {
   object-fit: contain;
   mix-blend-mode: lighten;
   transition: transform 0.6s ease;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0,0,0,0.4) 5%,
+    rgba(0,0,0,1) 15%,
+    rgba(0,0,0,1) 85%,
+    rgba(0,0,0,0.4) 95%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0,0,0,0.4) 5%,
+    rgba(0,0,0,1) 15%,
+    rgba(0,0,0,1) 85%,
+    rgba(0,0,0,0.4) 95%,
+    transparent 100%
+  );
 }
 
 .feature-split-image:hover img {
@@ -640,6 +666,14 @@ body:hover .cursor-glow {
   align-items: center;
   justify-content: center;
   padding: 40px 60px;
+  transform: translateX(-200px);
+  opacity: 0;
+  transition: transform 1.4s cubic-bezier(0.34, 1.4, 0.64, 1), opacity 0.8s ease;
+}
+
+.feature-split-content.visible {
+  transform: translateX(0);
+  opacity: 1;
 }
 
 .feature-split-content .parallax-quote {
