@@ -103,7 +103,29 @@ body:hover .cursor-glow {
   transition: var(--transition);
 }
 
+.nav-logo-accent {
+  display: inline-block;
+  color: var(--text);
+  animation: logoBreath 6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+@keyframes logoBreath {
+  0%, 100% {
+    color: var(--text);
+    text-shadow: none;
+  }
+  40%, 60% {
+    color: var(--accent);
+    text-shadow: 0 0 12px rgba(230, 57, 70, 0.35);
+  }
+}
+
 .nav-logo:hover {
+  color: var(--accent);
+}
+
+.nav-logo:hover .nav-logo-accent {
+  animation: none;
   color: var(--accent);
 }
 
