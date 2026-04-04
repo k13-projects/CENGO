@@ -248,22 +248,42 @@ if (isTouchDevice) {
 // ===== PARALLAX EFFECTS (desktop only — iOS can't handle this smoothly) =====
 if (!isTouchDevice) {
   const parallaxImages = document.querySelectorAll('.parallax-img');
+  const heroImg = document.querySelector('.hero-bg-img');
+  let currentHeroOffset = 0;
+  let lastScroll = 0;
 
   function updateParallax() {
     const scrolled = window.scrollY;
+    const scrollingUp = scrolled < lastScroll;
+    lastScroll = scrolled;
 
-    const hero = document.querySelector('.hero-bg-img');
-    if (hero) {
-      hero.style.transform = `scale(1.05) translateY(${scrolled * 0.15}px)`;
+    // Hero parallax — slow drift down, fast snap-back up
+    if (heroImg) {
+      const targetOffset = scrolled * 0.15;
+      if (scrollingUp) {
+        // Lerp fast toward target when scrolling up (80% catch-up per frame)
+        currentHeroOffset += (targetOffset - currentHeroOffset) * 0.8;
+      } else {
+        // Lerp slow when scrolling down (natural parallax lag)
+        currentHeroOffset += (targetOffset - currentHeroOffset) * 0.3;
+      }
+      // Snap to 0 when very close to top
+      if (scrolled < 10) currentHeroOffset = 0;
+      heroImg.style.transform = `scale(1.05) translateY(${currentHeroOffset}px)`;
     }
 
+    // Section divider parallax
     parallaxImages.forEach(img => {
       const rect = img.parentElement.getBoundingClientRect();
-      const speed = 0.3;
-      const yPos = rect.top * speed;
+      const yPos = rect.top * 0.3;
       img.style.transform = `translateY(${yPos}px)`;
     });
   }
 
-  window.addEventListener('scroll', updateParallax, { passive: true });
+  // Use rAF loop for smoother lerp instead of scroll event
+  function parallaxLoop() {
+    updateParallax();
+    requestAnimationFrame(parallaxLoop);
+  }
+  requestAnimationFrame(parallaxLoop);
 }
