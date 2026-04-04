@@ -55,7 +55,7 @@ document.querySelectorAll('.mobile-menu-link').forEach(link => {
 // ===== SCROLL REVEAL =====
 const revealElements = document.querySelectorAll(
   '.section-tag, .section-title, .about-image-wrap, .about-content, ' +
-  '.spotify-embed, .event-row, .contact-info, .contact-form, .parallax-quote'
+  '.spotify-embed, .events-past-title, .event-row, .contact-info, .contact-form, .parallax-quote'
 );
 
 revealElements.forEach(el => el.classList.add('reveal'));
@@ -108,13 +108,32 @@ contactForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const btn = contactForm.querySelector('button[type="submit"]');
   const originalText = btn.textContent;
-  btn.textContent = 'Sent!';
-  btn.style.background = '#22c55e';
-  setTimeout(() => {
-    btn.textContent = originalText;
-    btn.style.background = '';
-    contactForm.reset();
-  }, 2000);
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  fetch(contactForm.action, {
+    method: 'POST',
+    body: new FormData(contactForm),
+    headers: { 'Accept': 'application/json' }
+  }).then(res => {
+    if (res.ok) {
+      btn.textContent = 'Sent!';
+      btn.style.background = '#22c55e';
+      contactForm.reset();
+    } else {
+      btn.textContent = 'Error — try again';
+      btn.style.background = '#dc2626';
+    }
+  }).catch(() => {
+    btn.textContent = 'Error — try again';
+    btn.style.background = '#dc2626';
+  }).finally(() => {
+    btn.disabled = false;
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.style.background = '';
+    }, 2000);
+  });
 });
 
 // ===== O-PLAYER =====
