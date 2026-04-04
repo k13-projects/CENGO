@@ -261,8 +261,13 @@ body:hover .cursor-glow {
   transition: var(--transition);
 }
 
-.mobile-menu-link:hover {
+.mobile-menu-link:hover,
+.mobile-menu-link:active {
   color: var(--accent);
+}
+
+.mobile-menu-link:active {
+  transform: scale(0.96);
 }
 
 /* ===== O-PLAYER ===== */
@@ -813,20 +818,7 @@ body:hover .cursor-glow {
   line-height: 1.5;
 }
 
-@media (max-width: 768px) {
-  .feature-split {
-    flex-direction: column-reverse;
-    padding: 24px 0;
-  }
-
-  .feature-split-image {
-    max-width: 320px;
-  }
-
-  .feature-split-content {
-    padding: 24px 24px 0;
-  }
-}
+/* feature-split mobile handled in main responsive block */
 
 /* ===== EVENTS ===== */
 .events {
@@ -1070,6 +1062,8 @@ body:hover .cursor-glow {
 }
 
 /* ===== RESPONSIVE ===== */
+
+/* --- Tablet (1024px) --- */
 @media (max-width: 1024px) {
   .about-grid,
   .contact-grid {
@@ -1079,17 +1073,32 @@ body:hover .cursor-glow {
 
   .about-image-wrap {
     max-width: 500px;
+    margin: 0 auto;
   }
 
+  .about-content {
+    text-align: center;
+  }
+
+  .about-stats {
+    justify-content: center;
+  }
 }
 
+/* --- Mobile (768px) --- */
 @media (max-width: 768px) {
+  /* Hide cursor glow on touch devices */
+  .cursor-glow {
+    display: none !important;
+  }
+
+  /* Nav */
   .nav {
-    padding: 16px 24px;
+    padding: 16px 20px;
   }
 
   .nav.scrolled {
-    padding: 12px 24px;
+    padding: 12px 20px;
   }
 
   .nav-links {
@@ -1100,70 +1109,343 @@ body:hover .cursor-glow {
     display: flex;
   }
 
-  .hero-title {
-    font-size: clamp(4rem, 20vw, 8rem);
+  /* Hero */
+  .hero {
+    min-height: 100svh;
+    min-height: -webkit-fill-available;
   }
 
+  .hero-title {
+    font-size: clamp(3.5rem, 18vw, 7rem);
+  }
+
+  .hero-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 32px;
+    padding: 0 8px;
+  }
+
+  .hero-tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+  }
+
+  .hero-scroll {
+    bottom: 24px;
+  }
+
+  .hero-scroll-line {
+    height: 28px;
+  }
+
+  /* Sections */
   .section {
-    padding: 80px 0;
+    padding: 72px 0;
   }
 
   .section-title {
-    margin-bottom: 36px;
+    margin-bottom: 32px;
   }
 
+  .container {
+    padding: 0 20px;
+  }
+
+  /* About */
+  .about-image-wrap {
+    max-width: 340px;
+  }
+
+  .about-image-accent {
+    top: -10px;
+    left: -10px;
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .about-text {
+    font-size: 0.95rem;
+    line-height: 1.75;
+  }
+
+  .about-stats {
+    gap: 32px;
+    margin-top: 32px;
+    padding-top: 24px;
+  }
+
+  .stat-number {
+    font-size: 1.75rem;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+  }
+
+  /* Feature split — vertical animations on mobile */
+  .feature-split {
+    flex-direction: column-reverse;
+    padding: 24px 0;
+    gap: 8px;
+  }
+
+  .feature-split-image {
+    max-width: 300px;
+    transform: translateY(60px);
+    opacity: 0;
+  }
+
+  .feature-split-image.visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .feature-split-content {
+    padding: 20px 24px 0;
+    transform: translateY(40px);
+    opacity: 0;
+  }
+
+  .feature-split-content.visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .parallax-quote {
+    font-size: clamp(1.2rem, 5vw, 1.8rem);
+  }
+
+  /* Music */
+  .music-intro {
+    margin-top: -24px;
+    margin-bottom: 28px;
+    font-size: 0.9rem;
+  }
+
+  .spotify-embed {
+    margin-bottom: 32px;
+  }
+
+  .spotify-embed iframe {
+    height: 380px;
+  }
+
+  .music-platforms {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    justify-items: center;
+  }
+
+  .platform-link {
+    padding: 12px 8px;
+  }
+
+  .platform-link svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .platform-name {
+    font-size: 0.6rem;
+  }
+
+  /* Events */
+  .event-row {
+    gap: 16px;
+    padding: 20px 0;
+  }
+
+  .event-row:hover {
+    padding-left: 0;
+  }
+
+  .event-date {
+    min-width: 50px;
+  }
+
+  .event-day {
+    font-size: 1.6rem;
+  }
+
+  .event-info h3 {
+    font-size: 0.95rem;
+  }
+
+  .event-info p {
+    font-size: 0.8rem;
+  }
+
+  .event-action .btn-sm {
+    padding: 6px 14px;
+    font-size: 0.65rem;
+  }
+
+  .events-past-title {
+    margin-top: 48px;
+    margin-bottom: 24px;
+  }
+
+  .events-past .event-day {
+    font-size: 1.2rem;
+  }
+
+  /* Parallax */
   .parallax-divider {
-    height: 40vh;
-    min-height: 280px;
+    height: 35vh;
+    min-height: 220px;
   }
 
   .parallax-divider-short {
-    height: 30vh;
-    min-height: 200px;
+    height: 25vh;
+    min-height: 160px;
   }
 
-  .parallax-bg {
-    background-attachment: scroll;
+  /* Contact */
+  .contact-info {
+    text-align: center;
+  }
+
+  .contact-text br {
+    display: none;
+  }
+
+  .contact-socials {
+    justify-content: center;
+  }
+
+  .social-link {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Form — prevent iOS zoom on focus */
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 16px;
+    padding: 12px 16px;
+  }
+
+  .form-group textarea {
+    min-height: 100px;
+  }
+
+  /* Footer */
+  .footer-inner {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  /* Scroll reveal — shorter travel on mobile */
+  .reveal {
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+}
+
+/* --- Small phones (390px and below — iPhone mini/SE) --- */
+@media (max-width: 390px) {
+  .hero-title {
+    font-size: clamp(3rem, 18vw, 5rem);
+  }
+
+  .hero-cta {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-cta .btn {
+    width: 100%;
+    max-width: 260px;
   }
 
   .about-stats {
     gap: 24px;
   }
 
-  .event-row {
-    gap: 20px;
+  .stat-number {
+    font-size: 1.5rem;
   }
 
-  .event-info h3 {
-    font-size: 1rem;
+  .section {
+    padding: 56px 0;
   }
 
-  .footer-inner {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
+  .section-title {
+    font-size: clamp(1.8rem, 7vw, 2.4rem);
+  }
+
+  .event-action .btn-sm {
+    padding: 5px 10px;
+    font-size: 0.6rem;
   }
 }
 
-@media (max-width: 480px) {
-  .hero-cta {
-    flex-direction: column;
-    align-items: center;
+/* --- iOS safe areas --- */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .hero {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .btn {
-    width: 100%;
-    max-width: 280px;
+  .footer {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
 
-  .about-stats {
-    flex-direction: column;
-    gap: 16px;
+  .mobile-menu {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* --- Touch device hover fix --- */
+@media (hover: none) {
+  .hero:hover .hero-bg-img {
+    transform: scale(1.05);
   }
 
-  .music-platforms {
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
+  .hero:hover .hero-spotlight {
+    opacity: 0;
+  }
+
+  .event-row:hover {
+    padding-left: 0;
+  }
+
+  .platform-link:hover {
+    transform: none;
+  }
+
+  .btn-primary:hover {
+    transform: none;
+  }
+
+  .btn-outline:hover {
+    transform: none;
+  }
+
+  .social-link:hover {
+    transform: none;
+  }
+}
+
+/* --- Reduced motion preference --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .feature-split-image,
+  .feature-split-content {
+    opacity: 1;
+    transform: none;
   }
 }

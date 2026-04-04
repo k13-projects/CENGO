@@ -1,31 +1,34 @@
-// ===== CURSOR GLOW =====
+// ===== DEVICE DETECTION =====
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+// ===== CURSOR GLOW (desktop only) =====
 const cursorGlow = document.getElementById('cursorGlow');
 const heroSection = document.getElementById('hero');
 const heroSpotlight = document.getElementById('heroSpotlight');
 
-document.addEventListener('mousemove', (e) => {
-  cursorGlow.style.left = e.clientX + 'px';
-  cursorGlow.style.top = e.clientY + 'px';
+if (!isTouchDevice) {
+  document.addEventListener('mousemove', (e) => {
+    cursorGlow.style.left = e.clientX + 'px';
+    cursorGlow.style.top = e.clientY + 'px';
 
-  // Detect if cursor is over the hero section
-  const heroRect = heroSection.getBoundingClientRect();
-  const inHero = (
-    e.clientY >= heroRect.top &&
-    e.clientY <= heroRect.bottom &&
-    e.clientX >= heroRect.left &&
-    e.clientX <= heroRect.right
-  );
+    const heroRect = heroSection.getBoundingClientRect();
+    const inHero = (
+      e.clientY >= heroRect.top &&
+      e.clientY <= heroRect.bottom &&
+      e.clientX >= heroRect.left &&
+      e.clientX <= heroRect.right
+    );
 
-  cursorGlow.classList.toggle('glow-hero', inHero);
+    cursorGlow.classList.toggle('glow-hero', inHero);
 
-  // Update spotlight position relative to hero
-  if (inHero) {
-    const xPercent = ((e.clientX - heroRect.left) / heroRect.width) * 100;
-    const yPercent = ((e.clientY - heroRect.top) / heroRect.height) * 100;
-    heroSpotlight.style.setProperty('--spot-x', xPercent + '%');
-    heroSpotlight.style.setProperty('--spot-y', yPercent + '%');
-  }
-});
+    if (inHero) {
+      const xPercent = ((e.clientX - heroRect.left) / heroRect.width) * 100;
+      const yPercent = ((e.clientY - heroRect.top) / heroRect.height) * 100;
+      heroSpotlight.style.setProperty('--spot-x', xPercent + '%');
+      heroSpotlight.style.setProperty('--spot-y', yPercent + '%');
+    }
+  });
+}
 
 // ===== NAVIGATION SCROLL =====
 const nav = document.getElementById('nav');
@@ -230,30 +233,37 @@ function startPlaying(duration) {
 // Auto-play on landing for 2 seconds
 setTimeout(() => startPlaying(2000), 800);
 
-// Click O to play for 3 seconds
+// Click/tap O to play for 4 seconds
 heroO.addEventListener('click', () => {
   startPlaying(4000);
 });
 
-// ===== PARALLAX EFFECTS =====
-const parallaxImages = document.querySelectorAll('.parallax-img');
-
-function updateParallax() {
-  const scrolled = window.scrollY;
-
-  // Hero parallax
-  const hero = document.querySelector('.hero-bg-img');
-  if (hero) {
-    hero.style.transform = `scale(1.05) translateY(${scrolled * 0.15}px)`;
-  }
-
-  // Section divider parallax
-  parallaxImages.forEach(img => {
-    const rect = img.parentElement.getBoundingClientRect();
-    const speed = 0.3;
-    const yPos = rect.top * speed;
-    img.style.transform = `translateY(${yPos}px)`;
+if (isTouchDevice) {
+  heroO.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    startPlaying(4000);
   });
 }
 
-window.addEventListener('scroll', updateParallax, { passive: true });
+// ===== PARALLAX EFFECTS (desktop only — iOS can't handle this smoothly) =====
+if (!isTouchDevice) {
+  const parallaxImages = document.querySelectorAll('.parallax-img');
+
+  function updateParallax() {
+    const scrolled = window.scrollY;
+
+    const hero = document.querySelector('.hero-bg-img');
+    if (hero) {
+      hero.style.transform = `scale(1.05) translateY(${scrolled * 0.15}px)`;
+    }
+
+    parallaxImages.forEach(img => {
+      const rect = img.parentElement.getBoundingClientRect();
+      const speed = 0.3;
+      const yPos = rect.top * speed;
+      img.style.transform = `translateY(${yPos}px)`;
+    });
+  }
+
+  window.addEventListener('scroll', updateParallax, { passive: true });
+}
