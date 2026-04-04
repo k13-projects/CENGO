@@ -606,10 +606,12 @@ body:hover .cursor-glow {
 
 .about-stats {
   display: flex;
-  gap: 40px;
+  justify-content: center;
+  gap: 60px;
   margin-top: 40px;
   padding-top: 32px;
   border-top: 1px solid var(--border);
+  text-align: center;
 }
 
 .stat-number {

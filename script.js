@@ -52,7 +52,7 @@ document.querySelectorAll('.mobile-menu-link').forEach(link => {
   });
 });
 
-// ===== SCROLL REVEAL =====
+// ===== SCROLL REVEAL (reversible) =====
 const revealElements = document.querySelectorAll(
   '.section-tag, .section-title, .about-image-wrap, .about-content, ' +
   '.spotify-embed, .events-past-title, .event-row, .contact-info, .contact-form, .parallax-quote'
@@ -64,6 +64,8 @@ const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       entry.target.classList.add('visible');
+    } else {
+      entry.target.classList.remove('visible');
     }
   });
 }, {
@@ -73,14 +75,15 @@ const revealObserver = new IntersectionObserver((entries) => {
 
 revealElements.forEach(el => revealObserver.observe(el));
 
-// ===== FEATURE SPLIT SLIDE-IN =====
+// ===== FEATURE SPLIT SLIDE-IN (reversible) =====
 const featureElements = document.querySelectorAll('.feature-split-image, .feature-split-content');
 if (featureElements.length) {
   const featureObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('visible');
-        featureObserver.unobserve(entry.target);
+      } else {
+        entry.target.classList.remove('visible');
       }
     });
   }, {
@@ -88,6 +91,65 @@ if (featureElements.length) {
     rootMargin: '0px 0px -40px 0px'
   });
   featureElements.forEach(el => featureObserver.observe(el));
+}
+
+// ===== STAT COUNT-UP =====
+function formatStat(value, format) {
+  if (format === 'K') return (value / 1000).toFixed(value >= 1000 ? 0 : 1).replace(/\.0$/, '') + 'K';
+  return value.toString();
+}
+
+function animateCount(el, target, suffix, format, duration) {
+  const startTime = performance.now();
+
+  function tick(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(target * eased);
+    el.textContent = formatStat(current, format) + suffix;
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+
+  if (suffix === '∞+') {
+    el.textContent = '∞+';
+  } else {
+    el.textContent = '0' + suffix;
+    requestAnimationFrame(tick);
+  }
+}
+
+function resetCount(el, suffix) {
+  el.textContent = suffix === '∞+' ? '∞+' : '0' + suffix;
+}
+
+const statData = [
+  { suffix: '+', target: 50, format: null },
+  { suffix: '+', target: 10000, format: 'K' },
+  { suffix: '∞+', target: 0, format: null }
+];
+
+const statsSection = document.querySelector('.about-stats');
+const statNumbers = document.querySelectorAll('.stat-number');
+
+if (statsSection && statNumbers.length) {
+  const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        statNumbers.forEach((el, i) => {
+          const data = statData[i];
+          if (data) animateCount(el, data.target, data.suffix, data.format, 1500);
+        });
+      } else {
+        statNumbers.forEach((el, i) => {
+          const data = statData[i];
+          if (data) resetCount(el, data.suffix);
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+
+  statsObserver.observe(statsSection);
 }
 
 // ===== SMOOTH ANCHOR SCROLL =====
