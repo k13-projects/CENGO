@@ -378,7 +378,7 @@ body:hover .cursor-glow {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 30%;
+  object-position: center 65%;
   transform: scale(1.05);
   transition: transform 8s ease;
 }
@@ -693,6 +693,74 @@ body:hover .cursor-glow {
 
 .platform-link:hover .platform-name {
   color: var(--accent);
+}
+
+/* Coming Soon animation for unavailable platforms */
+.coming-soon-link {
+  position: relative;
+  perspective: 400px;
+}
+
+.platform-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.coming-soon-link .coming-soon-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  white-space: nowrap;
+  pointer-events: none;
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+}
+
+/* Logo + label: shrink to center on hide, grow from center on return */
+.coming-soon-link.show-coming-soon .platform-icon-wrap svg,
+.coming-soon-link.show-coming-soon .platform-name {
+  animation: shrinkOut 0.3s ease forwards;
+}
+
+/* Coming soon text: wipe in from left, hold, then flip away */
+.coming-soon-link.show-coming-soon .coming-soon-text {
+  animation: wipeInFlipOut 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Logo + label: grow back from center after coming soon disappears */
+.coming-soon-link.show-return .platform-icon-wrap svg,
+.coming-soon-link.show-return .platform-name {
+  animation: growIn 0.4s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+@keyframes shrinkOut {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0); }
+}
+
+@keyframes growIn {
+  0%   { opacity: 0; transform: scale(0); }
+  60%  { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes wipeInFlipOut {
+  0%   { clip-path: inset(0 100% 0 0); opacity: 1; transform: rotateY(0deg); }
+  25%  { clip-path: inset(0 0% 0 0);   opacity: 1; transform: rotateY(0deg); }
+  65%  { clip-path: inset(0 0% 0 0);   opacity: 1; transform: rotateY(0deg); }
+  90%  { clip-path: inset(0 0% 0 0);   opacity: 0; transform: rotateY(90deg); }
+  100% { clip-path: inset(0 0% 0 0);   opacity: 0; transform: rotateY(90deg); }
 }
 
 /* ===== PARALLAX DIVIDERS ===== */
@@ -1232,7 +1300,7 @@ body:hover .cursor-glow {
 
   .music-platforms {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0;
     justify-items: center;
   }

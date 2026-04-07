@@ -55,6 +55,51 @@ document.querySelectorAll('.mobile-menu-link').forEach(link => {
   });
 });
 
+// ===== AUTO-SORT EVENTS =====
+const events = [
+  { date: '2026-04-05', day: '05', month: 'APR', title: 'Row at Redhill', location: 'Santa Ana, CA', label: 'This Saturday' },
+  { date: '2026-04-18', day: '18', month: 'APR', title: 'Private Airbnb Party', location: 'Temecula, CA', label: 'Invite Only' },
+  { date: '2026-03-29', day: '24–29', month: 'MAR', title: 'Miami Music Week 2026', location: 'Miami, FL', label: 'Recap' },
+  { date: '2025-07-13', day: '10–13', month: 'JUL', title: 'Ibiza', location: 'Ibiza, Spain', label: '2025' },
+];
+
+function buildEventRow(ev, isPast) {
+  const btnClass = isPast ? 'btn btn-sm btn-outline' : 'btn btn-sm';
+  return `<div class="event-row">
+    <div class="event-date">
+      <span class="event-day">${ev.day}</span>
+      <span class="event-month">${ev.month}</span>
+    </div>
+    <div class="event-info">
+      <h3>${ev.title}</h3>
+      <p>${ev.location}</p>
+    </div>
+    <div class="event-action">
+      <span class="${btnClass}">${ev.label}</span>
+    </div>
+  </div>`;
+}
+
+(function sortEvents() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const upcoming = events.filter(e => new Date(e.date) >= today).sort((a, b) => new Date(a.date) - new Date(b.date));
+  const past = events.filter(e => new Date(e.date) < today).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const upcomingEl = document.getElementById('upcomingEvents');
+  const pastEl = document.getElementById('pastEvents');
+  const pastTitle = document.getElementById('pastShowsTitle');
+
+  upcomingEl.innerHTML = upcoming.length
+    ? upcoming.map(e => buildEventRow(e, false)).join('')
+    : '<p style="color:var(--text-muted);text-align:center;padding:24px 0;">No upcoming shows — stay tuned.</p>';
+
+  pastEl.innerHTML = past.map(e => buildEventRow(e, true)).join('');
+
+  if (!past.length) pastTitle.style.display = 'none';
+})();
+
 // ===== SCROLL REVEAL (reversible) =====
 const revealElements = document.querySelectorAll(
   '.section-tag, .section-title, .about-image-wrap, .about-content, ' +
@@ -154,6 +199,32 @@ if (statsSection && statNumbers.length) {
 
   statsObserver.observe(statsSection);
 }
+
+// ===== COMING SOON (Beatport & Apple Music) =====
+document.querySelectorAll('.coming-soon-link').forEach(link => {
+  let animating = false;
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (animating) return;
+    animating = true;
+
+    // Phase 1: shrink logo + wipe in "Coming Soon"
+    link.classList.remove('show-return');
+    link.classList.add('show-coming-soon');
+
+    // Phase 2: after text flips out, grow logo back
+    setTimeout(() => {
+      link.classList.remove('show-coming-soon');
+      link.classList.add('show-return');
+    }, 1600);
+
+    // Cleanup
+    setTimeout(() => {
+      link.classList.remove('show-return');
+      animating = false;
+    }, 2050);
+  });
+});
 
 // ===== SMOOTH ANCHOR SCROLL =====
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
