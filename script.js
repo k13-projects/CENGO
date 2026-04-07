@@ -155,6 +155,32 @@ if (statsSection && statNumbers.length) {
   statsObserver.observe(statsSection);
 }
 
+// ===== COMING SOON (Beatport & Apple Music) =====
+document.querySelectorAll('.coming-soon-link').forEach(link => {
+  let animating = false;
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (animating) return;
+    animating = true;
+
+    // Phase 1: shrink logo + wipe in "Coming Soon"
+    link.classList.remove('show-return');
+    link.classList.add('show-coming-soon');
+
+    // Phase 2: after text flips out, grow logo back
+    setTimeout(() => {
+      link.classList.remove('show-coming-soon');
+      link.classList.add('show-return');
+    }, 1600);
+
+    // Cleanup
+    setTimeout(() => {
+      link.classList.remove('show-return');
+      animating = false;
+    }, 2050);
+  });
+});
+
 // ===== SMOOTH ANCHOR SCROLL =====
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', (e) => {
