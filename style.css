@@ -689,6 +689,7 @@ body:hover .cursor-glow {
   text-transform: uppercase;
   color: var(--text-muted);
   transition: var(--transition);
+  text-align: center;
 }
 
 .platform-link:hover .platform-name {
@@ -1316,6 +1317,7 @@ body:hover .cursor-glow {
 
   .platform-name {
     font-size: 0.6rem;
+    white-space: nowrap;
   }
 
   /* Events */
