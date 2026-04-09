@@ -55,16 +55,59 @@ document.querySelectorAll('.mobile-menu-link').forEach(link => {
   });
 });
 
-// ===== AUTO-SORT EVENTS =====
-const events = [
-  { date: '2026-04-05', day: '05', month: 'APR', title: 'Row at Redhill', location: 'Santa Ana, CA', label: 'This Saturday' },
-  { date: '2026-04-18', day: '18', month: 'APR', title: 'Private Airbnb Party', location: 'Temecula, CA', label: 'Invite Only' },
-  { date: '2026-03-29', day: '24–29', month: 'MAR', title: 'Miami Music Week 2026', location: 'Miami, FL', label: 'Recap' },
+// ===== EVENTS FROM GOOGLE SHEET =====
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vREZfw_s7rB1L_rK2Mor3AySh7t4HwdPiYH9vPbq4oJsA4Y65K7LDsmowpJemq_F8hTQavu2G7VgWir/pub?output=csv';
+
+const FALLBACK_EVENTS = [
+  { date: '2026-04-18', day: '18', month: 'APR', title: 'Pool Party', location: 'Santa Ana, CA', label: 'INVITE ONLY' },
+  { date: '2026-04-05', day: '05', month: 'APR', title: 'Row at Redhill', location: 'Santa Ana, CA', label: 'TICKETS' },
+  { date: '2026-03-29', day: '24–29', month: 'MAR', title: 'Miami Music Week 2026', location: 'Miami, FL', label: 'RECAP' },
   { date: '2025-07-13', day: '10–13', month: 'JUL', title: 'Ibiza', location: 'Ibiza, Spain', label: '2025' },
 ];
 
+function parseCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, '_'));
+  return lines.slice(1).map(line => {
+    const values = [];
+    let current = '', inQuotes = false;
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { values.push(current.trim()); current = ''; }
+      else { current += ch; }
+    }
+    values.push(current.trim());
+    const row = {};
+    headers.forEach((h, i) => row[h] = values[i] || '');
+    return row;
+  });
+}
+
+function sanitize(str) {
+  const el = document.createElement('div');
+  el.textContent = str;
+  return el.innerHTML;
+}
+
+function sheetRowToEvent(row) {
+  return {
+    date: row.date || '',
+    day: row.day || row.day_display || '',
+    month: row.month || '',
+    title: sanitize(row.title || ''),
+    location: sanitize(row.location || ''),
+    label: sanitize(row.label || ''),
+    link: row.url || row.link || '',
+    visible: (row.go_live || row.visible || 'TRUE').toUpperCase() === 'TRUE',
+  };
+}
+
 function buildEventRow(ev, isPast) {
   const btnClass = isPast ? 'btn btn-sm btn-outline' : 'btn btn-sm';
+  const btnContent = ev.link
+    ? `<a href="${sanitize(ev.link)}" target="_blank" rel="noopener" class="${btnClass}">${ev.label}</a>`
+    : `<span class="${btnClass}">${ev.label}</span>`;
   return `<div class="event-row">
     <div class="event-date">
       <span class="event-day">${ev.day}</span>
@@ -75,17 +118,18 @@ function buildEventRow(ev, isPast) {
       <p>${ev.location}</p>
     </div>
     <div class="event-action">
-      <span class="${btnClass}">${ev.label}</span>
+      ${btnContent}
     </div>
   </div>`;
 }
 
-(function sortEvents() {
+function renderEvents(events) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const upcoming = events.filter(e => new Date(e.date) >= today).sort((a, b) => new Date(a.date) - new Date(b.date));
-  const past = events.filter(e => new Date(e.date) < today).sort((a, b) => new Date(b.date) - new Date(a.date));
+  const visible = events.filter(e => e.visible !== false);
+  const upcoming = visible.filter(e => new Date(e.date) >= today).sort((a, b) => new Date(a.date) - new Date(b.date));
+  const past = visible.filter(e => new Date(e.date) < today).sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const upcomingEl = document.getElementById('upcomingEvents');
   const pastEl = document.getElementById('pastEvents');
@@ -96,8 +140,27 @@ function buildEventRow(ev, isPast) {
     : '<p style="color:var(--text-muted);text-align:center;padding:24px 0;">No upcoming shows — stay tuned.</p>';
 
   pastEl.innerHTML = past.map(e => buildEventRow(e, true)).join('');
-
   if (!past.length) pastTitle.style.display = 'none';
+
+  // Re-apply reveal to dynamically added rows
+  document.querySelectorAll('.event-row').forEach(el => {
+    el.classList.add('reveal');
+    if (typeof revealObserver !== 'undefined') revealObserver.observe(el);
+  });
+}
+
+(async function loadEvents() {
+  try {
+    const res = await fetch(SHEET_CSV_URL);
+    if (!res.ok) throw new Error(res.status);
+    const csv = await res.text();
+    const rows = parseCSV(csv);
+    const events = rows.map(sheetRowToEvent);
+    if (events.length) { renderEvents(events); return; }
+  } catch (e) {
+    console.warn('Sheet fetch failed, using fallback events:', e);
+  }
+  renderEvents(FALLBACK_EVENTS);
 })();
 
 // ===== SCROLL REVEAL (reversible) =====
