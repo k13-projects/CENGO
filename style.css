@@ -764,6 +764,251 @@ body:hover .cursor-glow {
   100% { clip-path: inset(0 0% 0 0);   opacity: 0; transform: rotateY(90deg); }
 }
 
+/* ===== YOUTUBE ===== */
+.youtube {
+  background: var(--bg);
+}
+
+/* Stats bar */
+.yt-stats {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 48px;
+  margin-bottom: 48px;
+}
+
+.yt-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.yt-stat-value {
+  font-family: var(--font);
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+}
+
+.yt-stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* Featured video */
+.yt-featured {
+  margin-bottom: 40px;
+}
+
+.yt-featured-player {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.yt-featured-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.yt-featured-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.yt-featured-thumb:hover img {
+  transform: scale(1.04);
+}
+
+.yt-featured-player iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.yt-featured-info {
+  margin-top: 18px;
+}
+
+.yt-featured-info h3 {
+  font-family: var(--font);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.yt-featured-info p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Play button overlay */
+.yt-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 68px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--accent);
+  box-shadow: 0 0 30px var(--accent-glow);
+  transition: var(--transition);
+  pointer-events: none;
+}
+
+.yt-play::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-40%, -50%);
+  border-style: solid;
+  border-width: 10px 0 10px 17px;
+  border-color: transparent transparent transparent #fff;
+}
+
+.yt-featured-thumb:hover .yt-play {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.yt-play-sm {
+  width: 44px;
+  height: 31px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.yt-play-sm::after {
+  border-width: 6px 0 6px 11px;
+}
+
+/* Grid of recent videos */
+.yt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  margin-bottom: 48px;
+}
+
+.yt-card {
+  display: block;
+  color: var(--text);
+  transition: var(--transition);
+}
+
+.yt-card-thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-card);
+  margin-bottom: 14px;
+}
+
+.yt-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.yt-card:hover .yt-card-thumb img {
+  transform: scale(1.05);
+}
+
+.yt-card .yt-play-sm {
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.yt-card:hover .yt-play-sm {
+  opacity: 1;
+}
+
+.yt-card h4 {
+  font-family: var(--font);
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.yt-card:hover h4 {
+  color: var(--accent);
+}
+
+.yt-card p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* CTA */
+.yt-cta {
+  text-align: center;
+}
+
+/* Fallback: hide live elements, keep section + CTA */
+.youtube.yt-fallback .yt-stats,
+.youtube.yt-fallback .yt-featured,
+.youtube.yt-fallback .yt-grid {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .yt-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .yt-stats {
+    gap: 32px;
+    margin-bottom: 36px;
+  }
+  .yt-stat-value {
+    font-size: 1.9rem;
+  }
+  .yt-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .yt-featured-info h3 {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .yt-stats {
+    gap: 24px;
+  }
+  .yt-stat-value {
+    font-size: 1.6rem;
+  }
+}
+
 /* ===== PARALLAX DIVIDERS ===== */
 .parallax-divider {
   position: relative;

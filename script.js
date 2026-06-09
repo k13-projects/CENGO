@@ -163,10 +163,165 @@ function renderEvents(events) {
   renderEvents(FALLBACK_EVENTS);
 })();
 
+// ===== YOUTUBE CHANNEL =====
+const YOUTUBE_API_KEY = 'AIzaSyD9x9nqUqmRm9II-CHAOz7mg436UHbeCe4'; // YouTube Data API v3 — restrict by referrer (cengo.party) + API in Google Cloud
+const YOUTUBE_HANDLE  = 'cengo_ofc';
+
+function formatCount(n) {
+  const num = Number(n) || 0;
+  if (num >= 1e6) return (num / 1e6).toFixed(num >= 1e7 ? 0 : 1).replace(/\.0$/, '') + 'M';
+  if (num >= 1e3) return (num / 1e3).toFixed(num >= 1e4 ? 0 : 1).replace(/\.0$/, '') + 'K';
+  return String(num);
+}
+
+function timeAgo(iso) {
+  const then = new Date(iso).getTime();
+  if (!then) return '';
+  const secs = Math.max(1, Math.floor((Date.now() - then) / 1000));
+  const units = [
+    [31536000, 'year'], [2592000, 'month'], [604800, 'week'],
+    [86400, 'day'], [3600, 'hour'], [60, 'minute'],
+  ];
+  for (const [s, label] of units) {
+    const v = Math.floor(secs / s);
+    if (v >= 1) return `${v} ${label}${v > 1 ? 's' : ''} ago`;
+  }
+  return 'just now';
+}
+
+async function fetchYouTube() {
+  const base = 'https://www.googleapis.com/youtube/v3';
+  // 1) Channel stats + uploads playlist
+  const chRes = await fetch(`${base}/channels?part=statistics,contentDetails&forHandle=${YOUTUBE_HANDLE}&key=${YOUTUBE_API_KEY}`);
+  if (!chRes.ok) throw new Error('channels ' + chRes.status);
+  const chData = await chRes.json();
+  const channel = chData.items && chData.items[0];
+  if (!channel) throw new Error('channel not found');
+  const stats = {
+    subscribers: channel.statistics.subscriberCount,
+    views: channel.statistics.viewCount,
+    videos: channel.statistics.videoCount,
+  };
+  const uploadsId = channel.contentDetails.relatedPlaylists.uploads;
+
+  // 2) Latest uploads
+  const plRes = await fetch(`${base}/playlistItems?part=snippet,contentDetails&playlistId=${uploadsId}&maxResults=7&key=${YOUTUBE_API_KEY}`);
+  if (!plRes.ok) throw new Error('playlistItems ' + plRes.status);
+  const plData = await plRes.json();
+  let videos = (plData.items || []).map(it => {
+    const sn = it.snippet || {};
+    const thumbs = sn.thumbnails || {};
+    const thumb = (thumbs.maxres || thumbs.high || thumbs.medium || thumbs.default || {}).url || '';
+    return {
+      id: it.contentDetails.videoId,
+      title: sn.title || '',
+      thumb,
+      publishedAt: it.contentDetails.videoPublishedAt || sn.publishedAt || '',
+      views: 0,
+    };
+  }).filter(v => v.id);
+
+  // 3) Per-video view counts
+  if (videos.length) {
+    const ids = videos.map(v => v.id).join(',');
+    const vRes = await fetch(`${base}/videos?part=statistics&id=${ids}&key=${YOUTUBE_API_KEY}`);
+    if (vRes.ok) {
+      const vData = await vRes.json();
+      const viewMap = {};
+      (vData.items || []).forEach(v => { viewMap[v.id] = v.statistics.viewCount; });
+      videos = videos.map(v => ({ ...v, views: viewMap[v.id] || 0 }));
+    }
+  }
+
+  return { stats, videos };
+}
+
+function buildStats(stats) {
+  const cells = [
+    { value: formatCount(stats.subscribers), label: 'Subscribers' },
+    { value: formatCount(stats.views), label: 'Total Views' },
+    { value: formatCount(stats.videos), label: 'Videos' },
+  ];
+  return cells.map(c => `<div class="yt-stat">
+    <span class="yt-stat-value">${c.value}</span>
+    <span class="yt-stat-label">${c.label}</span>
+  </div>`).join('');
+}
+
+function buildFeatured(video) {
+  const meta = `${formatCount(video.views)} views · ${timeAgo(video.publishedAt)}`;
+  return `<div class="yt-featured-player" data-video-id="${sanitize(video.id)}">
+    <button class="yt-featured-thumb" type="button" aria-label="Play ${sanitize(video.title)}">
+      <img src="${sanitize(video.thumb)}" alt="${sanitize(video.title)}" loading="lazy">
+      <span class="yt-play"></span>
+    </button>
+  </div>
+  <div class="yt-featured-info">
+    <h3>${sanitize(video.title)}</h3>
+    <p>${meta}</p>
+  </div>`;
+}
+
+function buildVideoCard(video) {
+  const meta = `${formatCount(video.views)} views · ${timeAgo(video.publishedAt)}`;
+  return `<a class="yt-card" href="https://www.youtube.com/watch?v=${sanitize(video.id)}" target="_blank" rel="noopener">
+    <div class="yt-card-thumb">
+      <img src="${sanitize(video.thumb)}" alt="${sanitize(video.title)}" loading="lazy">
+      <span class="yt-play yt-play-sm"></span>
+    </div>
+    <h4>${sanitize(video.title)}</h4>
+    <p>${meta}</p>
+  </a>`;
+}
+
+function renderYouTube({ stats, videos }) {
+  const statsEl = document.getElementById('ytStats');
+  const featuredEl = document.getElementById('ytFeatured');
+  const gridEl = document.getElementById('ytGrid');
+
+  statsEl.innerHTML = buildStats(stats);
+  featuredEl.innerHTML = buildFeatured(videos[0]);
+  gridEl.innerHTML = videos.slice(1).map(buildVideoCard).join('');
+
+  // Click-to-load facade for the featured video
+  const player = featuredEl.querySelector('.yt-featured-player');
+  if (player) {
+    const thumb = player.querySelector('.yt-featured-thumb');
+    thumb.addEventListener('click', () => {
+      const id = player.getAttribute('data-video-id');
+      player.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0"
+        title="YouTube video" frameborder="0" allowfullscreen
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+    });
+  }
+
+  // Re-apply reveal to dynamically added cards
+  [featuredEl, ...gridEl.querySelectorAll('.yt-card')].forEach(el => {
+    el.classList.add('reveal');
+    if (typeof revealObserver !== 'undefined') revealObserver.observe(el);
+  });
+}
+
+function renderYouTubeFallback() {
+  const section = document.getElementById('youtube');
+  if (section) section.classList.add('yt-fallback');
+}
+
+(async function loadYouTube() {
+  if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === 'PASTE_KEY_HERE') { renderYouTubeFallback(); return; }
+  try {
+    const data = await fetchYouTube();
+    if (data.videos.length) { renderYouTube(data); return; }
+  } catch (e) {
+    console.warn('YouTube fetch failed, using fallback:', e);
+  }
+  renderYouTubeFallback();
+})();
+
 // ===== SCROLL REVEAL (reversible) =====
 const revealElements = document.querySelectorAll(
   '.section-tag, .section-title, .about-image-wrap, .about-content, ' +
-  '.spotify-embed, .events-past-title, .event-row, .contact-info, .contact-form, .parallax-quote'
+  '.yt-stats, .yt-featured, .spotify-embed, .events-past-title, .event-row, .contact-info, .contact-form, .parallax-quote'
 );
 
 revealElements.forEach(el => el.classList.add('reveal'));
