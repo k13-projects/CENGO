@@ -536,6 +536,62 @@ body:hover .cursor-glow {
   transform: translateY(-2px);
 }
 
+/* Platform-branded buttons (YouTube / Spotify) */
+.btn-youtube,
+.btn-spotify {
+  position: relative;
+  overflow: hidden;
+  gap: 10px;
+}
+
+.btn-youtube {
+  background: #ff0000;
+  color: #fff;
+}
+
+.btn-youtube:hover {
+  background: #e60000;
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-spotify {
+  background: #0a0a0a;
+  color: #1db954;
+  border: 1px solid rgba(29, 185, 84, 0.5);
+}
+
+.btn-spotify:hover {
+  border-color: #1db954;
+  box-shadow: 0 0 30px rgba(29, 185, 84, 0.35);
+  transform: translateY(-2px);
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-youtube span,
+.btn-spotify span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Faint oversized logo bleeding into the button background */
+.btn-logo-bg {
+  position: absolute;
+  right: -12px;
+  bottom: -16px;
+  width: 60px;
+  height: 60px;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
 .btn-sm {
   padding: 8px 20px;
   font-size: 0.75rem;
@@ -767,6 +823,20 @@ body:hover .cursor-glow {
 /* ===== YOUTUBE ===== */
 .youtube {
   background: var(--bg);
+}
+
+.yt-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.yt-heading-logo {
+  width: 0.92em;
+  height: 0.92em;
+  color: #ff0000;
+  flex-shrink: 0;
+  transform: translateY(0.04em);
 }
 
 /* Stats bar */
