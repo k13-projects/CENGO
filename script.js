@@ -166,6 +166,24 @@ function renderEvents(events) {
 // ===== YOUTUBE CHANNEL =====
 const YOUTUBE_API_KEY = 'AIzaSyD9x9nqUqmRm9II-CHAOz7mg436UHbeCe4'; // YouTube Data API v3 — restrict by referrer (cengo.party) + API in Google Cloud
 const YOUTUBE_HANDLE  = 'cengo_ofc';
+// Shorts have no official API flag — detect by duration. Anything this short or under is treated as a Short.
+const SHORT_MAX_SECONDS = 60;
+
+function parseDuration(iso) {
+  const m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso || '');
+  if (!m) return 0;
+  return (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0);
+}
+
+function formatTime(secs) {
+  secs = Math.round(Number(secs) || 0);
+  if (secs <= 0) return '';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  const mm = h ? String(m).padStart(2, '0') : String(m);
+  return (h ? h + ':' : '') + mm + ':' + String(s).padStart(2, '0');
+}
 
 function formatCount(n) {
   const num = Number(n) || 0;
@@ -204,11 +222,11 @@ async function fetchYouTube() {
   };
   const uploadsId = channel.contentDetails.relatedPlaylists.uploads;
 
-  // 2) Latest uploads
-  const plRes = await fetch(`${base}/playlistItems?part=snippet,contentDetails&playlistId=${uploadsId}&maxResults=7&key=${YOUTUBE_API_KEY}`);
+  // 2) Latest uploads (fetch a wider pool so we can split videos vs Shorts)
+  const plRes = await fetch(`${base}/playlistItems?part=snippet,contentDetails&playlistId=${uploadsId}&maxResults=15&key=${YOUTUBE_API_KEY}`);
   if (!plRes.ok) throw new Error('playlistItems ' + plRes.status);
   const plData = await plRes.json();
-  let videos = (plData.items || []).map(it => {
+  let items = (plData.items || []).map(it => {
     const sn = it.snippet || {};
     const thumbs = sn.thumbnails || {};
     const thumb = (thumbs.maxres || thumbs.high || thumbs.medium || thumbs.default || {}).url || '';
@@ -218,22 +236,35 @@ async function fetchYouTube() {
       thumb,
       publishedAt: it.contentDetails.videoPublishedAt || sn.publishedAt || '',
       views: 0,
+      isShort: false,
     };
   }).filter(v => v.id);
 
-  // 3) Per-video view counts
-  if (videos.length) {
-    const ids = videos.map(v => v.id).join(',');
-    const vRes = await fetch(`${base}/videos?part=statistics&id=${ids}&key=${YOUTUBE_API_KEY}`);
+  // 3) Per-video view counts + duration (duration → Short detection)
+  if (items.length) {
+    const ids = items.map(v => v.id).join(',');
+    const vRes = await fetch(`${base}/videos?part=statistics,contentDetails&id=${ids}&key=${YOUTUBE_API_KEY}`);
     if (vRes.ok) {
       const vData = await vRes.json();
-      const viewMap = {};
-      (vData.items || []).forEach(v => { viewMap[v.id] = v.statistics.viewCount; });
-      videos = videos.map(v => ({ ...v, views: viewMap[v.id] || 0 }));
+      const meta = {};
+      (vData.items || []).forEach(v => {
+        meta[v.id] = {
+          views: v.statistics.viewCount,
+          secs: parseDuration(v.contentDetails && v.contentDetails.duration),
+        };
+      });
+      items = items.map(v => {
+        const m = meta[v.id] || {};
+        return { ...v, views: m.views || 0, durationSecs: m.secs || 0, isShort: m.secs > 0 && m.secs <= SHORT_MAX_SECONDS };
+      });
     }
   }
 
-  return { stats, videos };
+  // Split: regular videos vs Shorts (preserve newest-first order from the playlist)
+  const videos = items.filter(v => !v.isShort);
+  const shorts = items.filter(v => v.isShort);
+
+  return { stats, videos, shorts };
 }
 
 function buildStats(stats) {
@@ -250,10 +281,12 @@ function buildStats(stats) {
 
 function buildFeatured(video) {
   const meta = `${formatCount(video.views)} views · ${timeAgo(video.publishedAt)}`;
+  const dur = formatTime(video.durationSecs);
   return `<div class="yt-featured-player" data-video-id="${sanitize(video.id)}">
     <button class="yt-featured-thumb" type="button" aria-label="Play ${sanitize(video.title)}">
       <img src="${sanitize(video.thumb)}" alt="${sanitize(video.title)}" loading="lazy">
       <span class="yt-play"></span>
+      ${dur ? `<span class="yt-duration">${dur}</span>` : ''}
     </button>
   </div>
   <div class="yt-featured-info">
@@ -264,8 +297,22 @@ function buildFeatured(video) {
 
 function buildVideoCard(video) {
   const meta = `${formatCount(video.views)} views · ${timeAgo(video.publishedAt)}`;
+  const dur = formatTime(video.durationSecs);
   return `<a class="yt-card" href="https://www.youtube.com/watch?v=${sanitize(video.id)}" target="_blank" rel="noopener">
     <div class="yt-card-thumb">
+      <img src="${sanitize(video.thumb)}" alt="${sanitize(video.title)}" loading="lazy">
+      <span class="yt-play yt-play-sm"></span>
+      ${dur ? `<span class="yt-duration">${dur}</span>` : ''}
+    </div>
+    <h4>${sanitize(video.title)}</h4>
+    <p>${meta}</p>
+  </a>`;
+}
+
+function buildShortCard(video) {
+  const meta = `${formatCount(video.views)} views`;
+  return `<a class="yt-short-card" href="https://www.youtube.com/shorts/${sanitize(video.id)}" target="_blank" rel="noopener">
+    <div class="yt-short-thumb">
       <img src="${sanitize(video.thumb)}" alt="${sanitize(video.title)}" loading="lazy">
       <span class="yt-play yt-play-sm"></span>
     </div>
@@ -274,29 +321,46 @@ function buildVideoCard(video) {
   </a>`;
 }
 
-function renderYouTube({ stats, videos }) {
+function renderYouTube({ stats, videos, shorts }) {
   const statsEl = document.getElementById('ytStats');
   const featuredEl = document.getElementById('ytFeatured');
   const gridEl = document.getElementById('ytGrid');
+  const shortsWrap = document.getElementById('ytShortsWrap');
+  const shortsEl = document.getElementById('ytShorts');
 
   statsEl.innerHTML = buildStats(stats);
-  featuredEl.innerHTML = buildFeatured(videos[0]);
-  gridEl.innerHTML = videos.slice(1).map(buildVideoCard).join('');
 
-  // Click-to-load facade for the featured video
-  const player = featuredEl.querySelector('.yt-featured-player');
-  if (player) {
-    const thumb = player.querySelector('.yt-featured-thumb');
-    thumb.addEventListener('click', () => {
-      const id = player.getAttribute('data-video-id');
-      player.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0"
-        title="YouTube video" frameborder="0" allowfullscreen
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
-    });
+  // Featured = latest regular video (never a Short); grid = the rest, capped
+  if (videos.length) {
+    featuredEl.innerHTML = buildFeatured(videos[0]);
+    gridEl.innerHTML = videos.slice(1, 7).map(buildVideoCard).join('');
+
+    // Click-to-load facade for the featured video
+    const player = featuredEl.querySelector('.yt-featured-player');
+    if (player) {
+      const thumb = player.querySelector('.yt-featured-thumb');
+      thumb.addEventListener('click', () => {
+        const id = player.getAttribute('data-video-id');
+        player.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0"
+          title="YouTube video" frameborder="0" allowfullscreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+      });
+    }
+  } else {
+    featuredEl.style.display = 'none';
+    gridEl.style.display = 'none';
+  }
+
+  // Shorts row (hidden entirely if none)
+  if (shorts.length && shortsWrap && shortsEl) {
+    shortsEl.innerHTML = shorts.slice(0, 10).map(buildShortCard).join('');
+  } else if (shortsWrap) {
+    shortsWrap.style.display = 'none';
   }
 
   // Re-apply reveal to dynamically added cards
-  [featuredEl, ...gridEl.querySelectorAll('.yt-card')].forEach(el => {
+  [featuredEl, ...gridEl.querySelectorAll('.yt-card'), shortsWrap].forEach(el => {
+    if (!el) return;
     el.classList.add('reveal');
     if (typeof revealObserver !== 'undefined') revealObserver.observe(el);
   });
@@ -311,7 +375,7 @@ function renderYouTubeFallback() {
   if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === 'PASTE_KEY_HERE') { renderYouTubeFallback(); return; }
   try {
     const data = await fetchYouTube();
-    if (data.videos.length) { renderYouTube(data); return; }
+    if (data.videos.length || data.shorts.length) { renderYouTube(data); return; }
   } catch (e) {
     console.warn('YouTube fetch failed, using fallback:', e);
   }
