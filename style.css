@@ -536,32 +536,47 @@ body:hover .cursor-glow {
   transform: translateY(-2px);
 }
 
-/* Platform-branded buttons (YouTube / Spotify) */
+/* Platform-branded buttons (YouTube / Spotify)
+   Default = neutral outline (like Book a Set) with a brand-colored logo;
+   hover = fills with the platform brand color. */
 .btn-youtube,
 .btn-spotify {
   position: relative;
   overflow: hidden;
   gap: 10px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
-.btn-youtube {
-  background: #ff0000;
-  color: #fff;
+/* YouTube — red logo by default, fills red on hover */
+.btn-youtube .btn-icon,
+.btn-youtube .btn-logo-bg {
+  color: #ff0000;
 }
 
 .btn-youtube:hover {
-  background: #e60000;
+  background: #ff0000;
+  color: #fff;
+  border-color: #ff0000;
   box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
   transform: translateY(-2px);
 }
 
-.btn-spotify {
-  background: #0a0a0a;
+.btn-youtube:hover .btn-icon,
+.btn-youtube:hover .btn-logo-bg {
+  color: #fff;
+}
+
+/* Spotify — green logo by default, fills black-on-green on hover */
+.btn-spotify .btn-icon,
+.btn-spotify .btn-logo-bg {
   color: #1db954;
-  border: 1px solid rgba(29, 185, 84, 0.5);
 }
 
 .btn-spotify:hover {
+  background: #0a0a0a;
+  color: #1db954;
   border-color: #1db954;
   box-shadow: 0 0 30px rgba(29, 185, 84, 0.35);
   transform: translateY(-2px);
@@ -581,14 +596,14 @@ body:hover .cursor-glow {
   z-index: 1;
 }
 
-/* Faint oversized logo bleeding into the button background */
+/* Faint oversized logo bleeding in from the left */
 .btn-logo-bg {
   position: absolute;
-  right: -12px;
+  left: -12px;
   bottom: -16px;
   width: 60px;
   height: 60px;
-  opacity: 0.16;
+  opacity: 0.18;
   pointer-events: none;
 }
 
@@ -826,7 +841,7 @@ body:hover .cursor-glow {
 }
 
 .yt-heading {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.4em;
 }
