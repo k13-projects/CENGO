@@ -60,3 +60,18 @@ When the repo owner uses these shorthands:
 ## Housekeeping
 
 - Cloud sync (iCloud/Drive/Dropbox) occasionally drops duplicate files named like `favicon 2.svg`. These are byte-identical copies of existing files — just delete them. Note: legitimate names like `images/Set 1.jpeg` use a space-number too, so don't blanket-ignore the pattern.
+
+
+---
+
+<!--K13_BROADCAST_START · managed by War Room — do not hand-edit-->
+## 📡 War Room Broadcasts (org-wide rules)
+> Synced from the K13 War Room. Each entry is a house rule that applies to every K13 project. Managed automatically — edit the rule in the War Room, not here.
+
+<!--bc:2026-06-26-reports-archive-and-qa-->
+### 2026-06-26 · Reports: archive every version + pass two-agent Chrome QA before "done"
+**Archive every report — never overwrite.** Each report is written to `docs/reports/<Project>_<Type>_<YYYY-MM-DD>.html` (e.g. `Miramar_Development-Report_2026-06-25.html`). Same-day re-run → append `_v2`, `_v3`. The dated file is **permanent** — if the site links a "latest", copy/symlink to it, but never delete or overwrite an older dated report. Filenames are client-facing, so they carry the project name + type + date and explain themselves in an email. Types: `Development-Report`, `Security-Audit`, `Legal-Compliance`.
+
+**No report is "done" until it passes the two-agent Chrome QA gate.** One agent **builds** the report; a second **tests** it — opens it in Chrome, screenshots desktop + mobile like a real user, and runs the design-review checklist (spacing, hierarchy, AI-slop, palette match, motion + `prefers-reduced-motion`, broken assets/links, Gmail-safe base64). Loop: fail → fix → re-review, until **design approval**. Only on PASS does the report take its final archived name and ship. Record the approval in a sidecar `docs/reports/<same-name>.qa.json` (date, screenshots, verdict) so "design signed off" is provable. Applies to **all** reports — dev, security, legal.
+
+<!--K13_BROADCAST_END-->
