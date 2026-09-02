@@ -9,9 +9,12 @@ This file orients any AI coding assistant (Claude in Cursor, Claude Code, etc.) 
 - **Static site** — plain `index.html` + `style.css` + `script.js`. No framework, no build step, no `npm install`, no dependencies.
 - **Run locally** with a tiny static server (so the data fetches behave — `file://` triggers CORS/referrer issues):
   ```bash
-  python3 -m http.server 8000
-  # then open http://localhost:8000
+  python3 -m http.server 9139 --bind 127.0.0.1
+  # then open http://localhost:9139
   ```
+  **Assigned dev port: `9139`** (K13 9130–9199 registry, `starter-kit/CONVENTIONS.md` in the War
+  Room; one fixed port per project, for life). It ran on 8000 until 2026-09-02, when the War Room
+  began cross-checking every repo's pin against the registry and flagged the drift.
   Opening `index.html` directly works for layout/styling, but live data falls back to placeholders.
 
 ## Architecture
